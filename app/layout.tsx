@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Wedding of Banyu & Fadli",
-  description: "You're Invited to The Wedding of Banyu & Fadli - 16 May 2026",
+  title: "The Wedding of Be & Rafi",
+  description: "You're Invited to The Wedding of Be & Rafi - 5 Juli 2026",
   openGraph: {
-    title: "The Wedding of Banyu & Fadli",
+    title: "The Wedding of Be & Rafi",
     description: "You're Invited",
-    images: ["https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-1.jpg"],
+    images: ["/bg-2.jpeg"],
   },
 };
 
