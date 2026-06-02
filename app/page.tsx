@@ -365,52 +365,73 @@ const GALLERY_IMAGES = [
   "https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-12.jpg",
 ];
 
+
 // ─── Cover / Landing ─────────────────────────────────────────────────────────
 function Cover({ guestName, onOpen }: { guestName: string; onOpen: () => void }) {
   const [closing, setClosing] = useState(false);
 
   const handleOpen = () => {
     setClosing(true);
-    setTimeout(onOpen, 800);
+    setTimeout(onOpen, 800); // Waktu transisi saat menutup cover
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center ${closing ? "cover-closing" : ""}`}>
+    <div className={`fixed inset-0 z-50 transition-opacity duration-700 ${closing ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+      
+      {/* Background Image */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 z-0"
         style={{
-          backgroundImage: `url('https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-1.jpg')`,
+          backgroundImage: `url('/bg-landing.jpeg')`, 
           backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundPosition: '25% 25%', // Memastikan bagian atas (kepala) tidak terpotong
+          backgroundRepeat: "no-repeat"
         }}
       />
-      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.55)" }} />
-      <div className="relative z-10 text-center px-8 text-white">
-        <p className="font-sans-light text-[10px] uppercase tracking-[0.5em] opacity-50 mb-6">The Wedding of</p>
-        <h1 className="font-script text-6xl md:text-7xl mb-1" style={{ color: "var(--gold-light)" }}>
-          Banyu
-        </h1>
-        <div className="flex items-center justify-center gap-3 my-2">
-          <div className="h-px w-10" style={{ background: "var(--gold)", opacity: 0.4 }} />
-          <span className="font-script text-3xl" style={{ color: "var(--gold)" }}>&amp;</span>
-          <div className="h-px w-10" style={{ background: "var(--gold)", opacity: 0.4 }} />
+      
+      {/* Gradient Overlay: Gelap di ujung atas dan bawah, transparan murni di tengah */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-0" />
+
+      {/* Wrapper Konten Utama - Flexbox penuh memastikan semua konten pasti di tengah (center) */}
+      <div className="relative z-10 w-full h-full flex flex-col items-center justify-between py-12 md:py-16 px-4">
+        
+        {/* Bagian Atas */}
+        <div className="flex flex-col items-center justify-center text-center w-full">
+          <p className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.4em] text-white/80 mb-1">
+            The Wedding Of
+          </p>
+          <h1 className="font-script text-6xl md:text-8xl drop-shadow-lg" style={{ color: "var(--gold-light)" }}>
+            Banyu & Fadli
+          </h1>
         </div>
-        <h1 className="font-script text-6xl md:text-7xl mb-4" style={{ color: "var(--gold-light)" }}>
-          Fadli
-        </h1>
-        <p className="font-sans-light text-xs tracking-[0.3em] opacity-50 mb-10">16 . 05 . 2026</p>
 
-        <div className="w-px h-8 mx-auto mb-4" style={{ background: "rgba(255,255,255,0.3)" }} />
-        <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-1">Kepada Yth.</p>
-        <p className="font-script text-2xl mb-8" style={{ color: "var(--gold-light)" }}>{guestName || "Tamu Undangan"}</p>
+        {/* Bagian Bawah */}
+        <div className="flex flex-col items-center justify-center text-center w-full">
+          <p className="font-sans text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-white/70 mb-1">
+            Kepada Yth. Bapak/Ibu/Saudara/i
+          </p>
+          
+          <div className="font-sans font-bold text-lg md:text-2xl text-white tracking-widest mb-1 drop-shadow-md">
+            {guestName || "Tamu Undangan"}
+          </div>
+          
+          <p className="font-sans text-[8px] md:text-[10px] italic text-white/50 mb-6 tracking-wider">
+            *Mohon maaf apabila ada kesalahan penulisan nama/gelar
+          </p>
 
-        <button
-          onClick={handleOpen}
-          className="btn-white-outline inline-flex items-center gap-3 envelope-float"
-        >
-          <EnvelopeIcon />
-          <span>Buka Undangan</span>
-        </button>
+          <button
+            onClick={handleOpen}
+            className="group flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-white/40 bg-black/40 hover:bg-black/60 backdrop-blur-md transition-all duration-300 envelope-float mx-auto"
+          >
+            <div className="scale-75 text-white flex items-center justify-center">
+              <EnvelopeIcon />
+            </div>
+            <span className="font-sans text-[10px] md:text-xs uppercase tracking-[0.2em] text-white">
+              Buka Undangan
+            </span>
+          </button>
+        </div>
+
       </div>
     </div>
   );
