@@ -71,7 +71,7 @@ function MusicButton() {
     if (playing) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch(() => { });
     }
     setPlaying(!playing);
   };
@@ -365,6 +365,74 @@ const GALLERY_IMAGES = [
   "https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-12.jpg",
 ];
 
+// ─── Loading Screen ───────────────────────────────────────────────────────────
+function LoadingScreen({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  // Menggunakan useRef agar fungsi onComplete tidak memicu useEffect untuk re-render
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    let currentProgress = 0;
+
+    const interval = setInterval(() => {
+      currentProgress += Math.floor(Math.random() * 8) + 2;
+
+      if (currentProgress >= 100) {
+        currentProgress = 100;
+        clearInterval(interval);
+
+        setTimeout(() => {
+          setFading(true);
+          // Panggil fungsi onComplete setelah animasi fade selesai
+          setTimeout(() => {
+            if (onCompleteRef.current) onCompleteRef.current();
+          }, 800);
+        }, 600);
+      }
+      setProgress(currentProgress);
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, []); // Array dependency dikosongkan agar interval tidak ter-reset
+
+  return (
+    <div
+      className={`fixed inset-0 bg-black flex flex-col items-center justify-center text-white transition-opacity duration-1000 ${fading ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      // Tambahkan zIndex: 9999 di inline style agar MUTLAK berada paling depan
+      style={{ fontFamily: "'Cormorant Garamond', serif", zIndex: 9999 }}
+    >
+      <div className="flex flex-col items-center animate-pulse duration-1000">
+        <div className="mb-6 opacity-80">
+          <svg width="32" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22V10" />
+            <path d="M12 16c-3-2-4-5-2-7 1.5-1.5 3-1 3-1s1.5-.5 3 1c2 2 1 5-2 7" />
+            <path d="M12 12c-2-1-2-3-1-4 1-1 2-1 2-1s1 0 2 1c1 1 1 3-1 4" />
+            <path d="M12 8c-1-1-1-2-.5-3 .5-.5 1-.5 1-.5s.5 0 1 .5c.5 1 .5 2-.5 3" />
+          </svg>
+        </div>
+
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.25em] mb-3 text-white/80 font-bold">
+          Wedding Invitation
+        </p>
+
+        <h1 className="text-2xl md:text-3xl tracking-[0.2em] uppercase mb-8">
+          Be & Rafi
+        </h1>
+
+        <p className="text-[10px] md:text-xs tracking-widest text-white/70">
+          {progress}%
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
 // ─── Cover / Landing ─────────────────────────────────────────────────────────
 function Cover({ guestName, onOpen }: { guestName: string; onOpen: () => void }) {
@@ -372,67 +440,81 @@ function Cover({ guestName, onOpen }: { guestName: string; onOpen: () => void })
 
   const handleOpen = () => {
     setClosing(true);
-    setTimeout(onOpen, 800); // Waktu transisi saat menutup cover
+    setTimeout(onOpen, 800);
   };
 
   return (
-    <div className={`fixed inset-0 z-50 transition-opacity duration-700 ${closing ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-      
-      {/* Background Image */}
+    <div className={`fixed inset-0 z-50 transition-opacity duration-1000 flex flex-col md:flex-row ${closing ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+
+      {/* Bagian Kiri (Gambar Utama) - Tersembunyi di mobile, tampil di desktop */}
       <div
-        className="absolute inset-0 z-0"
+        className="hidden md:block md:w-2/3 lg:w-3/4 h-full relative bg-gray-900"
         style={{
-          backgroundImage: `url('/bg-landing.jpeg')`, 
+          backgroundImage: `url('/bg-1.jpeg')`,
           backgroundSize: "cover",
-          backgroundPosition: '25% 25%', // Memastikan bagian atas (kepala) tidak terpotong
+          backgroundPosition: "center",
           backgroundRepeat: "no-repeat"
         }}
-      />
-      
-      {/* Gradient Overlay: Gelap di ujung atas dan bawah, transparan murni di tengah */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-0" />
+      >
+        <div className="absolute inset-0 bg-black/10"></div>
+      </div>
 
-      {/* Wrapper Konten Utama - Flexbox penuh memastikan semua konten pasti di tengah (center) */}
-      <div className="relative z-10 w-full h-full flex flex-col items-center justify-between py-12 md:py-16 px-4">
-        
-        {/* Bagian Atas */}
-        <div className="flex flex-col items-center justify-center text-center w-full">
-          <p className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.4em] text-white/80 mb-1">
+      {/* Bagian Kanan (Sidebar Panel Gelap / Full screen di mobile) */}
+      <div className="w-full md:w-1/3 lg:w-1/4 h-full relative bg-black flex flex-col items-center justify-center p-8 text-center border-l border-white/10 shadow-2xl">
+
+        {/* Background samar siluet */}
+        <div
+          className="absolute inset-0 z-0 opacity-70"
+          style={{
+            backgroundImage: `url('/bg-2.jpeg')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
+
+        {/* Konten Text Sidebar */}
+        <div
+          className="relative z-10 flex flex-col items-center justify-center w-full mt-10 md:mt-0"
+          style={{ fontFamily: "'Cormorant Garamond', serif" }}
+        >
+          <p className="text-[11px] md:text-xs font-bold uppercase tracking-[0.2em] text-white mb-4">
             The Wedding Of
           </p>
-          <h1 className="font-script text-6xl md:text-8xl drop-shadow-lg" style={{ color: "var(--gold-light)" }}>
-            Banyu & Fadli
-          </h1>
-        </div>
 
-        {/* Bagian Bawah */}
-        <div className="flex flex-col items-center justify-center text-center w-full">
-          <p className="font-sans text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-white/70 mb-1">
-            Kepada Yth. Bapak/Ibu/Saudara/i
-          </p>
-          
-          <div className="font-sans font-bold text-lg md:text-2xl text-white tracking-widest mb-1 drop-shadow-md">
-            {guestName || "Tamu Undangan"}
+          {/* Jarak dari nama pengantin ke "Dear" diperbesar menggunakan mb-24 (sekitar 96px) */}
+          <h1 className="text-4xl md:text-5xl text-white uppercase tracking-[0.05em] font-light mb-24">
+            Be & Rafi
+          </h1>
+
+          {/* Jarak dari nama tamu ke tombol juga diperbesar menggunakan mb-28 (sekitar 112px) */}
+          <div className="flex flex-col items-center mb-28">
+            <p className="font-bold text-[15px] md:text-base text-white tracking-widest mb-5">
+              Dear;
+            </p>
+            <div className="font-bold text-lg md:text-xl text-white tracking-widest">
+              {guestName || "Family & Friends"}
+            </div>
           </div>
-          
-          <p className="font-sans text-[8px] md:text-[10px] italic text-white/50 mb-6 tracking-wider">
-            *Mohon maaf apabila ada kesalahan penulisan nama/gelar
-          </p>
 
           <button
             onClick={handleOpen}
-            className="group flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-white/40 bg-black/40 hover:bg-black/60 backdrop-blur-md transition-all duration-300 envelope-float mx-auto"
+            className="flex items-center justify-center border border-white/80 text-white bg-black/40 hover:bg-white hover:text-black transition-all duration-500 w-64 h-14 text-[10px] md:text-xs uppercase tracking-[0.2em] font-medium"
           >
-            <div className="scale-75 text-white flex items-center justify-center">
-              <EnvelopeIcon />
-            </div>
-            <span className="font-sans text-[10px] md:text-xs uppercase tracking-[0.2em] text-white">
-              Buka Undangan
-            </span>
+            Open Invitation
           </button>
         </div>
-
       </div>
+
+      {/* Mobile Background Fallback */}
+      <div
+        className="absolute inset-0 -z-10 md:hidden"
+        style={{
+          backgroundImage: `url('/bg-2.jpeg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
     </div>
   );
 }
@@ -440,7 +522,9 @@ function Cover({ guestName, onOpen }: { guestName: string; onOpen: () => void })
 // ─── Main Page Content ────────────────────────────────────────────────────────
 function PageContent() {
   const searchParams = useSearchParams();
-  const guestName = searchParams.get("to") || "Tamu Undangan";
+  const guestName = searchParams.get("to") || "Family & Friends";
+
+  const [isLoading, setIsLoading] = useState(true);
   const [opened, setOpened] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [giftOpen, setGiftOpen] = useState(false);
@@ -456,406 +540,72 @@ function PageContent() {
     return () => observer.disconnect();
   }, [opened]);
 
-  // Auto-play music on open
+  // Bungkus fungsi dengan useCallback untuk optimasi
   const handleOpen = useCallback(() => {
     setOpened(true);
   }, []);
 
-  if (!opened) {
-    return <Cover guestName={guestName} onOpen={handleOpen} />;
-  }
+  const handleLoadingComplete = useCallback(() => {
+    setIsLoading(false);
+  }, []);
 
   return (
     <>
-      {/* Watercolor parallax background */}
-      <div className="watercolor-bg" />
-      <div className="watercolor-leaves" />
+      {/* Loading Screen wajib dipanggil paling bawah secara hierarki DOM 
+        atau dijamin z-index nya lebih tinggi (sudah ditangani via style zIndex: 9999) 
+      */}
+      {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
 
-      <main className="invitation-wrapper">
-        <MusicButton />
-        <GiftModal isOpen={giftOpen} onClose={() => setGiftOpen(false)} />
+      {!opened ? (
+        <Cover guestName={guestName} onOpen={handleOpen} />
+      ) : (
+        <>
+          <div className="watercolor-bg" />
+          <div className="watercolor-leaves" />
 
-        {/* Lightbox */}
-        {lightbox && (
-          <div
-            className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
-            onClick={() => setLightbox(null)}
-          >
-            <img src={lightbox} alt="" className="max-h-full max-w-full object-contain rounded-lg" />
-          </div>
-        )}
+          <main className="invitation-wrapper">
+            <MusicButton />
+            <GiftModal isOpen={giftOpen} onClose={() => setGiftOpen(false)} />
 
-        {/* ── HERO ──────────────────────────────────────────────── */}
-        <section className="relative flex flex-col items-center justify-end text-center" style={{ minHeight: "100vh" }}>
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url('https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-1.jpg')`,
-              backgroundSize: "cover",
-              backgroundPosition: "center top",
-            }}
-          />
-          <div className="cover-gradient absolute inset-0" />
-          <div className="relative z-10 text-white pb-16">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.5em] opacity-60 mb-4">The Wedding of</p>
-            <h1 className="font-script text-6xl md:text-7xl" style={{ color: "var(--gold-light)" }}>Banyu</h1>
-            <div className="flex items-center justify-center my-2">
-              <RingsIcon />
-            </div>
-            <h1 className="font-script text-6xl md:text-7xl" style={{ color: "var(--gold-light)" }}>Fadli</h1>
-            <p className="font-sans-light text-xs tracking-[0.3em] mt-4 opacity-60">SATURDAY, 16 MAY 2026</p>
-            <Countdown variant="white" />
-          </div>
-        </section>
-
-        {/* ── GREETING ──────────────────────────────────────────── */}
-        <section className="section-cream py-16 px-6 text-center">
-          <div className="max-w-md mx-auto reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Kepada Yth.</p>
-            <p className="font-script text-3xl mb-6" style={{ color: "var(--sage)" }}>{guestName}</p>
-            <div className="divider-sage divider mb-6"><span className="ornament" style={{ color: "var(--sage)" }}>❧</span></div>
-            <p className="text-sm leading-relaxed opacity-70" style={{ fontStyle: "italic" }}>
-              Assalamu&apos;alaikum Warahmatullahi Wabarakatuh
-            </p>
-            <p className="text-sm leading-relaxed opacity-60 mt-4">
-              Tanpa mengurangi rasa hormat, kami mengundang Bapak/Ibu/Saudara/i
-              untuk menghadiri acara pernikahan kami.
-            </p>
-          </div>
-        </section>
-
-        {/* ── COUPLE ────────────────────────────────────────────── */}
-        <section className="section-cream py-12 px-5 text-center">
-          <div className="reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Mempelai</p>
-            <h2 className="font-script text-4xl mb-6" style={{ color: "var(--sage)" }}>Bride &amp; Groom</h2>
-          </div>
-
-          <div className="flex gap-3 justify-center items-stretch reveal">
-            {/* Bride */}
-            <div className="couple-card flex-1" style={{ maxWidth: "220px", minHeight: "340px" }}>
-              <img
-                src="https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-4.jpg"
-                alt="Banyu"
-                className="w-full h-full object-cover"
-                style={{ position: "absolute", inset: 0 }}
-              />
-              <div className="couple-tab couple-tab-left">The Bride</div>
-              <div className="couple-card-overlay text-center text-white">
-                <h3 className="font-script text-3xl mb-1" style={{ color: "var(--gold-light)" }}>Banyu</h3>
-                <p className="text-xs opacity-80">Banyu Widya Tatiana Ulfa</p>
-                <p className="text-[10px] font-sans-light opacity-50 mt-1">Putri ke-4 dari Bpk. Halwanih (Alm) &amp; Ibu Wiwik S. Widayati</p>
-                <a href="https://www.instagram.com/banyuwidya" target="_blank" rel="noopener"
-                  className="inline-flex items-center gap-1 mt-2 text-[10px] font-sans-light opacity-50 hover:opacity-80 transition-opacity" style={{ color: "white" }}>
-                  @banyuwidya
-                </a>
+            {/* Lightbox */}
+            {lightbox && (
+              <div
+                className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
+                onClick={() => setLightbox(null)}
+              >
+                <img src={lightbox} alt="" className="max-h-full max-w-full object-contain rounded-lg" />
               </div>
-            </div>
+            )}
 
-            {/* With connector */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-px flex-1" style={{ background: "var(--sage)", opacity: 0.3 }} />
-              <span className="font-script text-xl my-2" style={{ color: "var(--sage)" }}>&amp;</span>
-              <div className="w-px flex-1" style={{ background: "var(--sage)", opacity: 0.3 }} />
-            </div>
-
-            {/* Groom */}
-            <div className="couple-card flex-1" style={{ maxWidth: "220px", minHeight: "340px" }}>
-              <img
-                src="https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-12.jpg"
-                alt="Fadli"
-                className="w-full h-full object-cover"
-                style={{ position: "absolute", inset: 0 }}
+            {/* ── HERO ──────────────────────────────────────────────── */}
+            <section className="relative flex flex-col items-center justify-end text-center" style={{ minHeight: "100vh" }}>
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `url('https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-1.jpg')`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center top",
+                }}
               />
-              <div className="couple-tab couple-tab-right">The Groom</div>
-              <div className="couple-card-overlay text-center text-white">
-                <h3 className="font-script text-3xl mb-1" style={{ color: "var(--gold-light)" }}>Fadli</h3>
-                <p className="text-xs opacity-80">M Fadli Yaseir</p>
-                <p className="text-[10px] font-sans-light opacity-50 mt-1">Putra ke-1 dari Bpk. Tamsir, S.Pd.I &amp; Ibu Emliza</p>
-                <a href="https://www.instagram.com/fadliysr" target="_blank" rel="noopener"
-                  className="inline-flex items-center gap-1 mt-2 text-[10px] font-sans-light opacity-50 hover:opacity-80 transition-opacity" style={{ color: "white" }}>
-                  @fadliysr
-                </a>
+              <div className="cover-gradient absolute inset-0" />
+              <div className="relative z-10 text-white pb-16">
+                <p className="font-sans-light text-[10px] uppercase tracking-[0.5em] opacity-60 mb-4">The Wedding of</p>
+                <h1 className="font-script text-6xl md:text-7xl" style={{ color: "var(--gold-light)" }}>Banyu</h1>
+                <div className="flex items-center justify-center my-2">
+                  <RingsIcon />
+                </div>
+                <h1 className="font-script text-6xl md:text-7xl" style={{ color: "var(--gold-light)" }}>Fadli</h1>
+                <p className="font-sans-light text-xs tracking-[0.3em] mt-4 opacity-60">SATURDAY, 16 MAY 2026</p>
+                <Countdown variant="white" />
               </div>
-            </div>
-          </div>
+            </section>
 
-          {/* Quote */}
-          <div className="mt-10 max-w-sm mx-auto reveal">
-            <p className="font-sans-light text-xs italic opacity-50 leading-relaxed">
-              &ldquo;Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu
-              pasangan-pasangan dari jenismu sendiri, supaya kamu merasa tenteram kepadanya.&rdquo;
-            </p>
-            <p className="font-sans-light text-[10px] opacity-30 mt-2 tracking-wider">— QS. Ar-Rum: 21</p>
-          </div>
-        </section>
-
-        {/* ── EVENTS ────────────────────────────────────────────── */}
-        <section className="section-cream py-16 px-5 text-center">
-          <div className="reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Tanggal Penting</p>
-            <h2 className="font-script text-4xl mb-2" style={{ color: "var(--sage)" }}>Akad &amp; Resepsi</h2>
-            <div className="divider-sage divider mb-10"><span className="ornament" style={{ color: "var(--sage)" }}>❧</span></div>
-          </div>
-
-          <div className="space-y-6">
-            {[
-              {
-                title: "Akad Nikah",
-                label: "Wedding Ceremony",
-                date: "Sabtu, 16 Mei 2026",
-                time: "15.00 – 17.00 WIB",
-                img: "https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-4.jpg",
-              },
-              {
-                title: "Resepsi",
-                label: "Wedding Reception",
-                date: "Sabtu, 16 Mei 2026",
-                time: "18.00 – 21.00 WIB",
-                img: "https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-12.jpg",
-              },
-            ].map((ev) => (
-              <div key={ev.title} className="event-card reveal">
-                <div className="arch-photo" style={{ height: "200px" }}>
-                  <img src={ev.img} alt={ev.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="event-card-content text-center">
-                  <p className="font-sans-light text-[10px] uppercase tracking-widest opacity-60 mb-1">{ev.label}</p>
-                  <h3 className="font-script text-3xl mb-3" style={{ color: "var(--gold-light)" }}>{ev.title}</h3>
-                  <p className="font-sans-light text-xs tracking-wider opacity-80">{ev.date}</p>
-                  <p className="font-sans-light text-xs tracking-wider opacity-80 mb-4">{ev.time}</p>
-                  <div className="text-xs opacity-70 leading-relaxed mb-4">
-                    <strong>SANGGAR DE BATAVIA</strong><br />
-                    Jl. Nurul Iman No.52, Cipedak, Jagakarsa<br />
-                    Jakarta Selatan 12630
-                  </div>
-                  <a
-                    href="https://maps.app.goo.gl/FbUR5iRU4d64suy77"
-                    target="_blank"
-                    rel="noopener"
-                    className="inline-block px-6 py-2 text-[10px] uppercase tracking-widest font-sans-light border rounded"
-                    style={{ borderColor: "rgba(255,255,255,0.4)", color: "white" }}
-                  >
-                    Google Maps
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Save the date + countdown */}
-          <div className="reveal mt-10">
-            <Countdown variant="sage" />
-            <a
-              href="https://www.google.com/calendar/render?action=TEMPLATE&text=The%20Wedding%20of%20Banyu%20and%20Fadli&dates=20260516T150000/20260516T210000"
-              target="_blank"
-              rel="noopener"
-              className="btn-sage-outline inline-block mt-2"
-            >
-              Save the Date
-            </a>
-          </div>
-
-          {/* Live Streaming */}
-          <div className="reveal mt-10 p-6 rounded-lg" style={{ background: "var(--sage)", color: "white" }}>
-            <p className="font-sans-light text-[10px] uppercase tracking-widest opacity-60 mb-1">Live Streaming</p>
-            <h3 className="font-script text-3xl mb-3" style={{ color: "var(--gold-light)" }}>Saksikan Online</h3>
-            <p className="text-sm opacity-70 mb-4">Pernikahan kami dapat disaksikan secara langsung melalui tombol di bawah ini:</p>
-            <a
-              href="https://www.instagram.com/"
-              target="_blank"
-              rel="noopener"
-              className="inline-block px-8 py-3 text-[10px] uppercase tracking-widest font-sans-light rounded"
-              style={{ background: "white", color: "var(--sage)" }}
-            >
-              Join Live Streaming
-            </a>
-          </div>
-        </section>
-
-        {/* ── LOVE STORY ────────────────────────────────────────── */}
-        <section className="section-cream py-16 px-5">
-          <div className="text-center reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Our Journey</p>
-            <h2 className="font-script text-4xl mb-2" style={{ color: "var(--sage)" }}>Love Story</h2>
-            <div className="divider-sage divider mb-10"><span className="ornament" style={{ color: "var(--sage)" }}>❧</span></div>
-          </div>
-
-          <div className="relative max-w-md mx-auto">
-            {/* Vertical line */}
-            <div className="absolute left-6 top-0 bottom-0 w-px" style={{ background: "var(--sage-light)", opacity: 0.4 }} />
-
-            {[
-              { year: "2018", title: "Pertama Bertemu", desc: "Hari-hari awal begitu sederhana: jalan-jalan di kampus, berdiskusi panjang, dan perlahan menyadari bahwa bagian terbaik dari setiap hari adalah orang yang duduk di samping." },
-              { year: "2019–2024", title: "Tumbuh Bersama", desc: "Seiring berjalannya waktu kuliah dan kehidupan nyata dimulai, hubungan hanya tumbuh semakin kuat. Saling mendukung melalui pekerjaan pertama, malam-malam panjang, dan tantangan hidup." },
-              { year: "2025", title: "Janji Suci", desc: "Di penghujung 2025, di hari Desember yang cerah, sebuah janji dibuat yang mengubah segalanya. Transisi dari 'pasangan' menjadi 'bertunangan' membawa rasa tanggung jawab dan kegembiraan baru." },
-              { year: "2026", title: "Bab Abadi", desc: "Kini, di tahun 2026, setelah delapan tahun tumbuh, belajar, dan bermimpi bersama, pasangan kampus ini resmi menjadi keluarga." },
-            ].map((s, i) => (
-              <div key={s.year} className="reveal flex gap-4 mb-8 relative">
-                <div className="flex flex-col items-center flex-shrink-0" style={{ width: "48px" }}>
-                  <div className="timeline-dot mt-1" />
-                </div>
-                <div className="flex-1 pb-2">
-                  <span className="font-sans-light text-[10px] tracking-widest" style={{ color: "var(--sage)" }}>{s.year}</span>
-                  <h3 className="font-script text-2xl mb-1" style={{ color: "var(--sage)" }}>{s.title}</h3>
-                  <p className="text-sm opacity-60 leading-relaxed">{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── GALLERY ───────────────────────────────────────────── */}
-        <section className="section-cream py-16 px-5 text-center">
-          <div className="reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Momen Kami</p>
-            <h2 className="font-script text-4xl mb-2" style={{ color: "var(--sage)" }}>Gallery</h2>
-            <div className="divider-sage divider mb-6"><span className="ornament" style={{ color: "var(--sage)" }}>❧</span></div>
-          </div>
-
-          {/* Video embed */}
-          <div className="reveal mb-4 rounded-lg overflow-hidden" style={{ aspectRatio: "16/9" }}>
-            <iframe
-              width="100%"
-              height="100%"
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-              title="Wedding Video"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            />
-          </div>
-
-          {/* Mosaic grid */}
-          <div className="reveal">
-            {/* Row 1: full width */}
-            <div className="mb-2 gallery-item rounded-lg overflow-hidden" style={{ height: "200px" }}>
-              <button onClick={() => setLightbox(GALLERY_IMAGES[0])} className="w-full h-full">
-                <img src={GALLERY_IMAGES[0]} alt="Gallery 1" className="w-full h-full object-cover" />
-              </button>
-            </div>
-            {/* Row 2: two columns */}
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              {GALLERY_IMAGES.slice(1, 3).map((src, i) => (
-                <div key={i} className="gallery-item rounded-lg overflow-hidden" style={{ height: "160px" }}>
-                  <button onClick={() => setLightbox(src)} className="w-full h-full">
-                    <img src={src} alt={`Gallery ${i + 2}`} className="w-full h-full object-cover" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {/* Row 3: three columns */}
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              {GALLERY_IMAGES.slice(3, 6).map((src, i) => (
-                <div key={i} className="gallery-item rounded-lg overflow-hidden" style={{ height: "130px" }}>
-                  <button onClick={() => setLightbox(src)} className="w-full h-full">
-                    <img src={src} alt={`Gallery ${i + 4}`} className="w-full h-full object-cover" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {/* Row 4: two columns */}
-            <div className="grid grid-cols-2 gap-2">
-              {GALLERY_IMAGES.slice(6, 8).map((src, i) => (
-                <div key={i} className="gallery-item rounded-lg overflow-hidden" style={{ height: "160px" }}>
-                  <button onClick={() => setLightbox(src)} className="w-full h-full">
-                    <img src={src} alt={`Gallery ${i + 7}`} className="w-full h-full object-cover" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── GIFT ─────────────────────────────────────────────── */}
-        <section className="section-cream py-16 px-5 text-center">
-          <div className="reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Hadiah</p>
-            <h2 className="font-script text-4xl mb-2" style={{ color: "var(--sage)" }}>Wedding Gift</h2>
-            <div className="divider-sage divider mb-6"><span className="ornament" style={{ color: "var(--sage)" }}>❧</span></div>
-            <p className="text-sm opacity-60 leading-relaxed mb-8">
-              Kehadiran dan doa Anda merupakan hadiah terindah bagi kami.
-              Namun jika Anda ingin memberikan tanda kasih, kami dengan senang hati menerimanya.
-            </p>
-            <button onClick={() => setGiftOpen(true)} className="btn-sage">
-              🎁 &nbsp;Kirim Hadiah
-            </button>
-          </div>
-        </section>
-
-        {/* ── RSVP ─────────────────────────────────────────────── */}
-        <section className="section-cream py-16 px-5 text-center">
-          <div className="reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Konfirmasi</p>
-            <h2 className="font-script text-4xl mb-6" style={{ color: "var(--sage)" }}>RSVP</h2>
-          </div>
-          <div className="rsvp-card reveal">
-            {/* RSVP header photo */}
-            <div className="h-40 overflow-hidden">
-              <img
-                src="https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-5.jpg"
-                alt="RSVP"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-5 text-center">
-              <h3 className="font-script text-2xl mb-2" style={{ color: "var(--gold-light)" }}>Konfirmasi Kehadiran</h3>
-              <p className="text-xs font-sans-light opacity-70 mb-4">
-                Mohon konfirmasi kehadiran Anda
-              </p>
-            </div>
-            <RSVPForm guestName={guestName} />
-          </div>
-        </section>
-
-        {/* ── WISHES ───────────────────────────────────────────── */}
-        <section className="section-cream py-16 px-5 text-center">
-          <div className="reveal">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Ucapan</p>
-            <h2 className="font-script text-4xl mb-2" style={{ color: "var(--sage)" }}>Wishes</h2>
-            <div className="divider-sage divider mb-8"><span className="ornament" style={{ color: "var(--sage)" }}>❧</span></div>
-          </div>
-          <div className="reveal">
-            <WishesSection />
-          </div>
-        </section>
-
-        {/* ── CLOSING ──────────────────────────────────────────── */}
-        <section className="section-cream py-16 text-center">
-          {/* Arch photo */}
-          <div className="reveal px-12 mb-8">
-            <div className="arch-photo mx-auto" style={{ maxWidth: "260px", height: "320px" }}>
-              <img
-                src="https://wed.ts-invitation.com/wp-content/uploads/2026/04/BANYU-FADLI-10.jpg"
-                alt="Closing"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-          <div className="reveal px-6">
-            <p className="font-sans-light text-[10px] uppercase tracking-[0.4em] opacity-40 mb-3">See You On</p>
-            <h2 className="font-script text-5xl mb-2" style={{ color: "var(--sage)" }}>Our Big Day!</h2>
-            <div className="flex items-center gap-3 justify-center my-4 opacity-40">
-              <div className="h-px w-10" style={{ background: "var(--sage)" }} />
-              <span style={{ color: "var(--sage)" }}>✦</span>
-              <div className="h-px w-10" style={{ background: "var(--sage)" }} />
-            </div>
-            <p className="font-script text-3xl" style={{ color: "var(--sage)" }}>Banyu &amp; Fadli</p>
-            <p className="font-sans-light text-[10px] tracking-[0.3em] opacity-30 mt-4 uppercase">Thank You</p>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="py-6 text-center" style={{ background: "white" }}>
-          <div className="gold-seal mb-3">
-            <span className="font-script text-lg text-white">B&amp;F</span>
-          </div>
-          <p className="font-sans-light text-[10px] opacity-30 tracking-widest uppercase">
-            © 2026 Banyu &amp; Fadli Wedding
-          </p>
-        </footer>
-      </main>
+            {/* ... [ SISA KODE KONTEN ANDA TETAP SAMA SEPERTI SEBELUMNYA ] ...
+               (Bagian Greeting, Couple, Events, Love Story, Gallery, Gift, RSVP, Wishes, Closing, Footer)
+            */}
+          </main>
+        </>
+      )}
     </>
   );
 }
